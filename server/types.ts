@@ -1,5 +1,5 @@
 export interface RemoteFunsType {
-  [method: string]: Function;
+  [method: string]: Function | String; // func or url link
 }
 
 export class ServerInterface {

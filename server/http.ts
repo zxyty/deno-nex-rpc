@@ -1,5 +1,8 @@
 import { NexServer, route, NexRequest, NexResponse } from "../deps.ts";
 import { RemoteFunsType, ServerInterface } from "./types.ts";
+import { setRemoteSourceRefreshTime, getRemoteSourceRefreshTime } from "./config.ts";
+
+setTimeout(setRemoteSourceRefreshTime);
 
 class HttpServer extends ServerInterface {
   nexServer: NexServer | null = null;
@@ -17,8 +20,17 @@ class HttpServer extends ServerInterface {
         (req: NexRequest, res: NexResponse) => {
           try {
             const { body: args = [] } = req;
-            const result = c[1](...args);
-            res.send(result);
+            if (typeof c[1] === "string" && c[1].startsWith("http")) {
+              import(`${c[1]}?t=${getRemoteSourceRefreshTime()}`).then(module => {
+                const result = module.default(...args);
+                res.send(result);
+              });
+            } else if (typeof c[1] === "function") {
+              const result = c[1](...args);
+              res.send(result);
+            } else {
+              res.send("");
+            }
           } catch (error) {
             res.send500(error);
           }
